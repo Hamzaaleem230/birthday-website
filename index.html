@@ -182,14 +182,7 @@
 
     #initial-greeting-section {
       background-color: white;
-      transition: all 0.3s ease;
       border: 3px solid black;
-    }
-
-    #initial-greeting-section:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-      cursor: pointer;
     }
 
   </style>
@@ -615,7 +608,7 @@
     });
 
     const audio = document.getElementById("birthdayAudio");
-    audio.volume = 0.4; // 0 = mute, 1 = full — adjust as you like
+    audio.volume = 0.5; // 0 = mute, 1 = full — adjust as you like
 
     // some browsers block autoplay, so use fallback
     document.addEventListener("click", () => {
@@ -626,3 +619,4 @@
 
 
 </html>
+
