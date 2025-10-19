@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Janamdin Mubarak Ho - Aapke Liye Ek Khaas Tohfa!</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font: Inter -->
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap");
+    body {
+      font-family: "Inter", sans-serif;
+      background-color: #f0f4f8; /* Soft light blue/grey background */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+      overflow-x: hidden; /* Prevent horizontal scroll from fireworks */
+    }
+    /* Custom animation for the gift box pulse */
+    @keyframes pulse-shadow {
+      0% {
+        box-shadow: 0 0 10px rgba(253, 186, 116, 0.7);
+      }
+      50% {
+        box-shadow: 0 0 25px rgba(253, 186, 116, 1),
+                   0 0 50px rgba(253, 186, 116, 0.5);
+      }
+      100% {
+        box-shadow: 0 0 10px rgba(253, 186, 116, 0.7);
+      }
+    }
+    .gift-pulse {
+      animation: pulse-shadow 1.5s infinite alternate;
+      transition: all 0.3s ease;
+    }
+    /* Blast animation for final gift */
+    .blast-animation {
+      transform: scale(2);
+      opacity: 0;
+      transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+    }
+    /* --- Confetti/Fireworks Effects --- */
+    .confetti-effect {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 50;
+    }
+    .confetti-piece {
+      position: absolute;
+      width: 8px;
+      height: 16px;
+      background-color: #fbbd23; /* Yellow */
+      opacity: 0;
+      transform-origin: 50% 50%;
+      animation: confetti-fall 3s ease-in-out forwards;
+    }
+    @keyframes confetti-fall {
+      0% {
+        transform: translate3d(0, -100px, 0) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translate3d(var(--x), 100vh, 0) rotate(var(--rot));
+        opacity: 0;
+      }
+    }
+    /* --- Modal Styling --- */
+    #riddle-modal {
+      background-color: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+    }
+    /* --- Continuous Confetti (Party Popper) --- */
+    @keyframes fallConfetti {
+      0% {
+        transform: translateY(-10vh) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(110vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+    .party-popper {
+      position: fixed;
+      top: -10px;
+      width: 8px;
+      height: 14px;
+      background: var(--color);
+      left: var(--x);
+      animation: fallConfetti var(--duration) linear infinite;
+      z-index: 1;
+      border-radius: 2px;
+    }
+    /* --- Firework Rocket & Blast --- */
+    @keyframes rocketFly {
+      0% {
+        transform: translateY(100vh) scale(0.6);
+        opacity: 1;
+      }
+      80% {
+        transform: translateY(10vh) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(10vh) scale(0);
+        opacity: 0;
+      }
+    }
+    @keyframes blastEffect {
+      0% {
+        transform: scale(0.3);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(3);
+        opacity: 0;
+      }
+    }
+    .firework {
+      position: fixed;
+      bottom: 0;
+      left: var(--x);
+      width: 6px;
+      height: 25px;
+      background: var(--color);
+      animation: rocketFly var(--duration) ease-out infinite;
+      z-index: 0;
+    }
+    .firework::after {
+      content: "";
+      position: absolute;
+      top: -10px;
+      left: -10px;
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      background: var(--color);
+      opacity: 0;
+      animation: blastEffect 0.8s ease-out infinite;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 p-4">
+  <!-- Confetti/Fireworks Container -->
+  <div id="confetti-container" class="confetti-effect hidden"></div>
+
+  <!-- Modal for Riddle Instructions (Hidden initially) -->
+  <div id="riddle-modal" class="fixed inset-0 flex items-center justify-center p-4 hidden">
+    <div
+      class="bg-white p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-md text-center border-t-8 border-indigo-600 transform scale-90 transition-transform duration-300"
+      id="modal-content">
+      <!-- ❌ Close Button Added Here -->
+      <button id="close-modal-btn"
+        class="absolute top-3 right-3 text-gray-400 hover:text-red-500 text-2xl font-bold focus:outline-none transition">
+        &times;
+      </button>
+      <h3 class="text-2xl sm:text-3xl font-extrabold text-indigo-700 mb-4">
+        Challenge Rules!
+      </h3>
+      <p class="text-gray-700 mb-6 text-lg">🎁 Aapka Gift locked hai! 🔑</p>
+      <p class="text-md text-gray-600 mb-6">
+        Tohfe ko unlock karne ke liye aapko yeh **3 Paheliyan (Riddles)**
+        solve karni hongi. Har sahi jawab aapko manzil ke kareeb laayega!
+      </p>
+      <button id="start-riddles-button"
+        class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl transition duration-300 shadow-md transform hover:scale-105">
+        Challenge Shuru Karein!
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content Container -->
+  <div id="main-container" class="w-full max-w-lg mx-auto px-4 sm:px-6 lg:px-8 transition-transform duration-500">
+    <!-- 1. Initial Greeting Section (Shown first) -->
+    <section id="initial-greeting-section"
+      class="bg-white p-6 sm:p-8 md:p-10 rounded-3xl shadow-2xl border border-gray-200 text-center space-y-8">
+      <header class="p-4 sm:p-6 bg-pink-400 rounded-xl shadow-lg transform rotate-[-1deg]">
+        <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-2 tracking-wide animate-bounce">
+          Happy Birthday!
+        </h1>
+        <p class="text-lg sm:text-xl md:text-2xl font-semibold text-gray-800">
+          Sabse Bahadur Shakhs Ko!
+        </p>
+        <p id="motivational-message" class="mt-4 text-md sm:text-lg text-gray-700 italic font-medium">
+        </p>
+      </header>
+      <p class="text-lg font-medium text-gray-700">
+        Aapke liye ek khaas tohfa tayyar hai! Yeh box kholiye aur
+        challenge shuru karein.
+      </p>
+      <div class="flex justify-center">
+        <button id="tap-to-start-button"
+          class="p-4 rounded-full bg-yellow-400 hover:bg-yellow-500 transition-all duration-300 shadow-xl transform hover:scale-110">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"
+            class="w-20 h-20 sm:w-24 sm:h-24 text-red-600 gift-pulse">
+            <title>Tap to Start</title>
+            <!-- Gift Box Base -->
+            <path fill="currentColor"
+              d="M102.4 204.8H409.6c11.3 0 20.4 9.1 20.4 20.4V460.8c0 11.3-9.1 20.4-20.4 20.4H102.4c-11.3 0-20.4-9.1-20.4-20.4V225.2c0-11.3 9.1-20.4 20.4-20.4z" />
+            <!-- Gift Box Lid -->
+            <path fill="#fbbd23"
+              d="M440.8 194.4l-18-50.6c-5-14-18.7-23.8-33.8-23.8H123c-15.1 0-28.8 9.8-33.8 23.8l-18 50.6H440.8z" />
+            <!-- Ribbon Vertical -->
+            <rect x="235.2" y="102.4" width="41.6" height="379.4" fill="#ef4444" />
+            <!-- Bow -->
+            <path fill="#dc2626"
+              d="M256 102.4l-30.8 77.2c-2.4 6-9.1 10.4-16.1 10.4H128c-9.1 0-14.7-9.5-10.4-17.6l45.2-70.4c3.4-5.3 10.1-8.2 16.2-7.5l75.4 8.7z" />
+            <path fill="#dc2626"
+              d="M256 102.4l30.8 77.2c2.4 6 9.1 10.4 16.1 10.4H384c9.1 0 14.7-9.5 10.4-17.6l-45.2-70.4c-3.4-5.3-10.1-8.2-16.2-7.5l-75.4 8.7z" />
+          </svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- 2. Riddle Challenge Container (Hidden initially) -->
+    <div id="challenge-container" class="bg-white p-6 sm:p-8 md:p-10 rounded-3xl shadow-2xl border border-gray-200 hidden">
+      <!-- Riddle Challenge Section -->
+      <section id="riddle-section" class="space-y-6 text-center">
+        <h2 class="text-2xl sm:text-3xl font-bold text-gray-700 border-b-2 pb-2 mb-6">
+          🔑 Riddle Challenge 🔑
+        </h2>
+        <p class="text-sm sm:text-base">Apna jawab roman urdu me dain (use small letters)</p>
+        <!-- Riddle Display -->
+        <div id="riddle-box" class="bg-indigo-50 p-4 sm:p-6 rounded-xl shadow-inner border-l-4 border-indigo-500">
+          <p id="riddle-text" class="text-lg sm:text-xl font-medium text-gray-800 mb-4">
+            <!-- Riddle text will be inserted here by JS -->
+          </p>
+          <input type="text" id="answer-input" placeholder="Apna Jawab Yahan Likhein..."
+            class="w-full p-3 border-2 border-indigo-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-150" />
+          <button id="submit-button"
+            class="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition duration-300 shadow-md hover:shadow-lg transform hover:scale-[1.02]">
+            Jawab Dein
+          </button>
+          <button id="hint-button"
+            class="mt-2 w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 rounded-xl transition duration-300">
+            Hint
+          </button>
+        </div>
+        <!-- Hint and Status Messages -->
+        <p id="hint-text" class="text-sm text-red-500 italic hidden">
+          <!-- Hint text will appear here -->
+        </p>
+        <p id="status-message" class="text-md font-semibold text-green-600 mt-4 h-6">
+          <!-- Status messages (Correct/Incorrect/Riddle Count) will appear here -->
+        </p>
+      </section>
+
+      <!-- Gift Box Section (Hidden initially, appears after 3 riddles) -->
+      <section id="gift-unlock-section" class="space-y-6 text-center mt-10 hidden">
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-green-600 animate-pulse">
+          🔓 Mubarakaan! Gift Unlock Ho Gaya! 🔓
+        </h2>
+        <p class="text-lg font-medium text-gray-700">
+          Ab aapko is jaadui dabbe par sirf
+          <span class="font-bold text-indigo-600">3 baar Tap</span> karna hai
+          taaki yeh phat jaaye aur apko aapka tohfa mil jaaye!
+        </p>
+        <div id="gift-box-container" class="relative flex justify-center">
+          <!-- Gift Box Icon (Medium Size) -->
+          <svg id="gift-box" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"
+            class="w-24 h-24 sm:w-32 sm:h-32 cursor-pointer text-pink-500 gift-pulse transition-all duration-500">
+            <title>Final Gift Box</title>
+            <!-- Gift Box Base -->
+            <path fill="currentColor"
+              d="M102.4 204.8H409.6c11.3 0 20.4 9.1 20.4 20.4V460.8c0 11.3-9.1 20.4-20.4 20.4H102.4c-11.3 0-20.4-9.1-20.4-20.4V225.2c0-11.3 9.1-20.4 20.4-20.4z" />
+            <!-- Gift Box Lid -->
+            <path fill="#fbbd23"
+              d="M440.8 194.4l-18-50.6c-5-14-18.7-23.8-33.8-23.8H123c-15.1 0-28.8 9.8-33.8 23.8l-18 50.6H440.8z" />
+            <!-- Ribbon Vertical -->
+            <rect x="235.2" y="102.4" width="41.6" height="379.4" fill="#ef4444" />
+            <!-- Ribbon Horizontal -->
+            <rect x="82" y="246.4" width="348" height="41.6" fill="#ef4444" />
+            <!-- Bow -->
+            <path fill="#dc2626"
+              d="M256 102.4l-30.8 77.2c-2.4 6-9.1 10.4-16.1 10.4H128c-9.1 0-14.7-9.5-10.4-17.6l45.2-70.4c3.4-5.3 10.1-8.2 16.2-7.5l75.4 8.7z" />
+            <path fill="#dc2626"
+              d="M256 102.4l30.8 77.2c2.4 6 9.1 10.4 16.1 10.4H384c9.1 0 14.7-9.5 10.4-17.6l-45.2-70.4c-3.4-5.3-10.1-8.2-16.2-7.5l-75.4 8.7z" />
+          </svg>
+        </div>
+        <p id="tap-count-message" class="text-sm font-semibold text-gray-500 mt-2">
+          Abhi tak 0 baar Tap kiya hai...
+        </p>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const riddles = [
+      { riddle: "Woh kya hai jo hamesha nichy ati he, upar nhi jati?", answer: "barish", hint: "Yeh cheez mausam se juri he." },
+      { riddle: "Woh kya chez he jisy jitna bhi kha lo lekin pait nhi bharta?", answer: "mar", hint: "Yeh chez hamary amma abba se juri he." },
+      { riddle: "Woh kya hai jo hamesha upar ki taraf jaati hai, magar kabhi neeche nahi aata?", answer: "umar", hint: "Yeh har guzarte saal ke saath badhti hai." },
+    ];
+    const motivationalMessages = [
+      "zindagi ki har mushkil aapko behtar banane aayi hai.",
+      "Aapki himmat aur muskurahat sabse badi taqat hai.",
+      "Yaad rakhiye, aapke andar ek aisi taqat hai jo har dard se jeet sakti hai.",
+      "Aap roz ek naye din ki shuruat karte hain, aur yahi sabse badi jeet hai.",
+    ];
+    let currentRiddleIndex = 0;
+    let giftTapCount = 0;
+    const giftRedirectUrl = "https://smart-assistant-gamma.vercel.app/";
+
+    const mainContainer = document.getElementById("main-container");
+    const initialGreetingSection = document.getElementById("initial-greeting-section");
+    const challengeContainer = document.getElementById("challenge-container");
+    const tapToStartButton = document.getElementById("tap-to-start-button");
+    const riddleModal = document.getElementById("riddle-modal");
+    const startRiddlesButton = document.getElementById("start-riddles-button");
+    const confettiContainer = document.getElementById("confetti-container");
+    const riddleText = document.getElementById("riddle-text");
+    const answerInput = document.getElementById("answer-input");
+    const submitButton = document.getElementById("submit-button");
+    const hintButton = document.getElementById("hint-button");
+    const hintText = document.getElementById("hint-text");
+    const statusMessage = document.getElementById("status-message");
+    const giftUnlockSection = document.getElementById("gift-unlock-section");
+    const giftBox = document.getElementById("gift-box");
+    const tapCountMessage = document.getElementById("tap-count-message");
+    const motivationalMessageEl = document.getElementById("motivational-message");
+
+    function ConfettiBlast() {
+      confettiContainer.classList.remove("hidden");
+      const colors = ["#fbbd23", "#ef4444", "#10b981", "#6366f1", "#ec4899"];
+      const pieces = 50;
+      for (let i = 0; i < pieces; i++) {
+        const piece = document.createElement("div");
+        piece.classList.add("confetti-piece");
+        piece.style.backgroundColor =
+          colors[Math.floor(Math.random() * colors.length)];
+        piece.style.left = `${Math.random() * 100}vw`;
+        piece.style.animationDelay = `${Math.random() * 0.5}s`;
+        piece.style.setProperty("--x", `${(Math.random() - 0.5) * 500}px`);
+        piece.style.setProperty("--rot", `${Math.random() * 360}deg`);
+        confettiContainer.appendChild(piece);
+      }
+      setTimeout(() => {
+        confettiContainer.classList.add("hidden");
+        confettiContainer.innerHTML = "";
+      }, 3000);
+    }
+
+    function displayRandomMotivationalMessage() {
+      const randomIndex = Math.floor(
+        Math.random() * motivationalMessages.length
+      );
+      motivationalMessageEl.textContent = `"${motivationalMessages[randomIndex]}"`;
+    }
+
+    function showModal() {
+      riddleModal.classList.remove("hidden");
+      document.getElementById("modal-content").classList.remove("scale-90");
+      document.getElementById("modal-content").classList.add("scale-100");
+    }
+
+    function hideModalAndStartChallenge() {
+      document.getElementById("modal-content").classList.remove("scale-100");
+      document.getElementById("modal-content").classList.add("scale-90");
+      setTimeout(() => {
+        riddleModal.classList.add("hidden");
+        initialGreetingSection.classList.add("hidden");
+        challengeContainer.classList.remove("hidden");
+        loadRiddle();
+      }, 300);
+    }
+
+    function loadRiddle() {
+      if (currentRiddleIndex < riddles.length) {
+        const current = riddles[currentRiddleIndex];
+        riddleText.textContent = `Paheli ${currentRiddleIndex + 1}: ${current.riddle}`;
+        answerInput.value = "";
+        hintText.classList.add("hidden");
+        statusMessage.textContent = `Aapne ${currentRiddleIndex} Paheli solve kar li hain.`;
+        submitButton.disabled = false;
+        hintButton.disabled = false;
+      } else {
+        unlockGift();
+      }
+      displayRandomMotivationalMessage();
+    }
+
+    function handleSubmission() {
+      const userAnswer = answerInput.value
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "");
+      const current = riddles[currentRiddleIndex];
+      const correctAnswer = current.answer
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "");
+      if (userAnswer === correctAnswer) {
+        statusMessage.textContent = "✅ Shandaar! Jawab sahi hai!";
+        statusMessage.classList.remove("text-red-600", "text-gray-500");
+        statusMessage.classList.add("text-green-600");
+        submitButton.disabled = true;
+        hintButton.disabled = true;
+        setTimeout(() => {
+          currentRiddleIndex++;
+          loadRiddle();
+        }, 1000);
+      } else {
+        statusMessage.textContent =
+          "❌ Galat jawab! Kripya phir se koshish karein.";
+        statusMessage.classList.remove("text-green-600", "text-gray-500");
+        statusMessage.classList.add("text-red-600");
+        answerInput.focus();
+      }
+    }
+
+    function handleHint() {
+      const current = riddles[currentRiddleIndex];
+      hintText.textContent = `Sanket: ${current.hint}`;
+      hintText.classList.remove("hidden");
+    }
+
+    function unlockGift() {
+      document.getElementById("riddle-section").classList.add("hidden");
+      giftUnlockSection.classList.remove("hidden");
+      tapCountMessage.textContent = `Sirf 3 baar Tap karna hai! (Abhi tak 0 baar)`;
+      giftBox.classList.add("gift-pulse");
+    }
+
+    function handleGiftTap() {
+      if (giftTapCount < 3) {
+        giftTapCount++;
+        tapCountMessage.textContent = `Sirf 3 baar Tap karna hai! (Abhi tak ${giftTapCount} baar)`;
+        giftBox.classList.add("scale-105", "rotate-1");
+        setTimeout(() => {
+          giftBox.classList.remove("scale-105", "rotate-1");
+        }, 150);
+        if (giftTapCount === 3) {
+          tapCountMessage.textContent =
+            "💥 Box phata! Tohfa khul raha hai...";
+          giftBox.classList.remove("gift-pulse");
+          giftBox.classList.add("blast-animation");
+          setTimeout(() => {
+            window.location.href = giftRedirectUrl;
+          }, 500);
+        }
+      }
+    }
+
+    window.onload = function () {
+      document.getElementById("close-modal-btn").addEventListener("click", () => {
+        const modal = document.getElementById("riddle-modal");
+        const modalContent = document.getElementById("modal-content");
+        modalContent.classList.remove("scale-100");
+        modalContent.classList.add("scale-90");
+        setTimeout(() => {
+          modal.classList.add("hidden");
+        }, 200);
+      });
+      displayRandomMotivationalMessage();
+      ConfettiBlast();
+      challengeContainer.classList.add("hidden");
+      tapToStartButton.addEventListener("click", showModal);
+      startRiddlesButton.addEventListener("click", hideModalAndStartChallenge);
+      submitButton.addEventListener("click", handleSubmission);
+      hintButton.addEventListener("click", handleHint);
+      giftBox.addEventListener("click", handleGiftTap);
+      answerInput.addEventListener("keypress", (e) => {
+        if (
+          e.key === "Enter" &&
+          !challengeContainer.classList.contains("hidden")
+        ) {
+          handleSubmission();
+        }
+      });
+    };
+
+    // === Continuous Confetti (Party Popper) ===
+    function createPartyPoppers() {
+      for (let i = 0; i < 60; i++) { 
+        const popper = document.createElement("div");
+        popper.classList.add("party-popper");
+        popper.style.setProperty("--x", Math.random() * 100 + "vw");
+        popper.style.setProperty(
+          "--color",
+          ["#f87171", "#facc15", "#4ade80", "#60a5fa", "#f472b6"][
+            Math.floor(Math.random() * 5)
+          ]
+        );
+        popper.style.setProperty("--duration", 5 + Math.random() * 3 + "s");
+        document.body.appendChild(popper);
+      }
+    }
+
+    // === Fireworks (Bottom Launch + Blast) ===
+    function createFireworks() {
+      setInterval(() => {
+        const firework = document.createElement("div");
+        firework.classList.add("firework");
+        const x = Math.random() * 100;
+        const color = ["#ef4444", "#22c55e", "#3b82f6", "#eab308", "#a855f7"][
+          Math.floor(Math.random() * 5)
+        ];
+        firework.style.setProperty("--x", x + "vw");
+        firework.style.background = color;
+        document.body.appendChild(firework);
+
+        setTimeout(() => {
+          const blast = document.createElement("div");
+          blast.classList.add("blast");
+          blast.style.left = x + "vw";
+          blast.style.top = Math.random() * 30 + 10 + "vh";
+          blast.style.background = color;
+          document.body.appendChild(blast);
+
+          setTimeout(() => blast.remove(), 800);
+        }, 1800);
+
+        setTimeout(() => firework.remove(), 2000);
+      }, 700);
+    }
+
+    window.addEventListener("load", () => {
+      createPartyPoppers();
+      createFireworks();
+    });
+  </script>
+</body>
+</html>
